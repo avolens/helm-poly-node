@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.heimdall.deployment.name }}
+  labels:
+    {{- include "poly-node.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.heimdall.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: "heimdall"
+  template:
+    metadata:
+      {{- with .Values.heimdall.deployment.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app: "heimdall"
+    spec:
+      {{- with .Values.heimdall.deployment.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.heimdall.serviceAccount.create }}
+      serviceAccountName: {{ .Values.heimdall.serviceAccount.name }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.heimdall.deployment.podSecurityContext | nindent 8 }}
+      volumes:
+      - name: jwt-secret
+        secret:
+          secretName: jwt-secret
+      {{- if .Values.heimdall.persistentVolume.create }}
+      - name: heimdall-data
+        persistentVolumeClaim:
+          claimName: heimdall-pvc
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.heimdall.deployment.securityContext | nindent 12 }}
+          {{- if .Values.heimdall.deployment.image.digest }}
+          image: "{{ .Values.heimdall.deployment.image.repository }}@{{ .Values.heimdall.deployment.image.digest }}"
+          {{- else }}
+          image: "{{ .Values.heimdall.deployment.image.repository }}:{{ .Values.heimdall.deployment.image.tag | default "latest" }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.heimdall.deployment.image.pullPolicy }}
+          command: ["heimdall"]
+          args:
+            {{- range .Values.heimdall.deployment.commandArgs }}
+            - {{ . | quote }}
+            {{- end }}
+          ports:
+            - name: http-rpc
+              containerPort: 8545
+              protocol: TCP
+            - name: auth-port
+              containerPort: 8551
+              protocol: TCP
+          volumeMounts:
+          - name: jwt-secret
+            readOnly: true
+            mountPath: "/secret/"
+          {{- if .Values.heimdall.persistentVolume.create }}
+          - name : heimdall-data
+            mountPath: "/data/"
+          {{- end}}

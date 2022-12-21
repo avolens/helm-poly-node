@@ -1,0 +1,17 @@
+{{- if .Values.heimdall.persistentVolume.create }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: heimdall-pvc
+  {{- with .Values.heimdall.persistentVolume.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.heimdall.persistentVolume.size }}
+  storageClassName: {{ .Values.heimdall.persistentVolume.class }}
+{{- end }}

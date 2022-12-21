@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.bor.deployment.name }}
+  labels:
+    {{- include "poly-node.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.bor.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: "bor"
+  template:
+    metadata:
+      {{- with .Values.bor.deployment.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app: "bor"
+    spec:
+      {{- with .Values.bor.deployment.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.bor.serviceAccount.create }}
+      serviceAccountName: {{ .Values.bor.serviceAccount.name }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.bor.deployment.podSecurityContext | nindent 8 }}
+      volumes:
+      - name: jwt-secret
+        secret:
+          secretName: jwt-secret
+      {{- if .Values.bor.persistentVolume.create }}
+      - name: bor-data
+        persistentVolumeClaim:
+          claimName: bor-pvc
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.bor.deployment.securityContext | nindent 12 }}
+          {{- if .Values.bor.deployment.image.digest }}
+          image: "{{ .Values.bor.deployment.image.repository }}@{{ .Values.bor.deployment.image.digest }}"
+          {{- else }}
+          image: "{{ .Values.bor.deployment.image.repository }}:{{ .Values.bor.deployment.image.tag | default "latest" }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.bor.deployment.image.pullPolicy }}
+          args:
+            {{- range .Values.bor.deployment.commandArgs }}
+            - {{ . | quote }}
+            {{- end }}
+          volumeMounts:
+          - name: jwt-secret
+            readOnly: true
+            mountPath: "/secret/"
+          {{- if .Values.bor.persistentVolume.create }}
+          - name : bor-data
+            mountPath: "/data/"
+          {{- end }}

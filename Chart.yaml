@@ -1,0 +1,14 @@
+apiVersion: v2
+name: poly-node
+description: Polygon node on Kubernetes using Heimdall as validator layer client and Bor as block producer layer client
+type: application
+version: 0.1.0-beta
+maintainers:
+  - name: "AVOLENS GmbH"
+    email: info@avolens.com
+    url: avolens.com
+keywords:
+  - blockchain
+  - polygon
+  - heimdall
+  - bor

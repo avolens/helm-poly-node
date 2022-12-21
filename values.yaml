@@ -1,0 +1,60 @@
+heimdall:
+  deployment:
+    name: "heimdall"
+    image:
+      repository: 0xpolygon/heimdalll
+      pullPolicy: Always
+      tag: "0.3.0"
+      digest: "sha256:6076673a510228fe7293f80a7e0bc12827277832f6ab977abc76b8d736830d05"
+      pullSecret: ""
+    replicas: 1
+    commandArgs:
+      - "foo"
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+
+  persistentVolume:
+    create: false
+    size: 400Gi
+    class: standard-rwo
+    annotations:
+      "helm.sh/resource-policy": keep
+
+  service:
+    name: "heimdall"
+    type: ClusterIP
+    annotations: {}
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: "heimdall"
+
+bor:
+  deployment:
+    name: "bor"
+    image:
+      repository: 0xpolygon/bor
+      pullPolicy: Always
+      tag: "0.3.0"
+      digest: "sha256:5b458ec75197e3bfe531eabe98478e769628484f996d04e630149d307ddef25e"
+      pullSecret: ""
+    replicas: 1
+    commandArgs:
+      - "--execution-endpoint=http://heimdall.default.svc.cluster.local:8551"
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+
+  persistentVolume:
+    create: false
+    size: 400Gi
+    class: standard-rwo
+    annotations:
+      "helm.sh/resource-policy": keep
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: "bor"
