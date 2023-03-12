@@ -2,24 +2,39 @@ heimdall:
   deployment:
     name: "heimdall"
     image:
-      repository: 0xpolygon/heimdalll
+      repository: 0xpolygon/heimdall
       pullPolicy: Always
       tag: "0.3.0"
       digest: "sha256:6076673a510228fe7293f80a7e0bc12827277832f6ab977abc76b8d736830d05"
       pullSecret: ""
     replicas: 1
     commandArgs:
-      - "foo"
+      - "start"
+      - "--p2p.laddr=tcp://0.0.0.0:26656"
+      - "--rpc.laddr=tcp://0.0.0.0:26657"
     podAnnotations: {}
     podSecurityContext: {}
     securityContext: {}
+    chainId: heimdall-137
+    heimdallRest:
+      commandArgs:
+        - "rest-server"
+        - "--laddr=tcp://0.0.0.0:1317"
+        - "--node=tcp://127.0.0.1:26657"
+  rabbitmq: TODO
 
   persistentVolume:
-    create: false
-    size: 400Gi
-    class: standard-rwo
-    annotations:
-      "helm.sh/resource-policy": keep
+    snapshot:
+      create: false
+      size: 400Gi
+      class: standard-rwo
+      annotations:
+        "helm.sh/resource-policy": keep
+    chaindata:
+      size: 400Gi
+      class: standard-rwo
+      annotations:
+        "helm.sh/resource-policy": keep
 
   service:
     name: "heimdall"
@@ -37,8 +52,8 @@ bor:
     image:
       repository: 0xpolygon/bor
       pullPolicy: Always
-      tag: "0.3.0"
-      digest: "sha256:5b458ec75197e3bfe531eabe98478e769628484f996d04e630149d307ddef25e"
+      tag: "0.3.5"
+      digest: "sha256:4d50fadc6e96508b2e202491d047ec4a1363687c85baf0080caf4a2ea3911ef1"
       pullSecret: ""
     replicas: 1
     commandArgs:

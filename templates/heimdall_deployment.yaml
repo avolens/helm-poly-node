@@ -28,16 +28,27 @@ spec:
       securityContext:
         {{- toYaml .Values.heimdall.deployment.podSecurityContext | nindent 8 }}
       volumes:
-      - name: jwt-secret
-        secret:
-          secretName: jwt-secret
-      {{- if .Values.heimdall.persistentVolume.create }}
-      - name: heimdall-data
+      - name: heimdall-chaindata
         persistentVolumeClaim:
-          claimName: heimdall-pvc
+          claimName: heimdall-chaindata-pvc
+      {{- if .Values.heimdall.persistentVolume.snapshot.create }}
+      - name: heimdall-snapshot
+        persistentVolumeClaim:
+          claimName: heimdall-snapshot-pvc
       {{- end }}
+      initContainers:
+      - name: init-heimdall
+        image: busybox:1.36.0
+        command: [""]
+        volumeMounts:
+        - name: heimdall-chaindata
+          mountPath: /chaindata
+        {{- if .Values.heimdall.persistentVolume.snapshot.create }}
+        - name: heimdall-snapshot
+          mountPath: /snapshot
+        {{- end }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: {{ .Chart.Name }}-heimdall
           securityContext:
             {{- toYaml .Values.heimdall.deployment.securityContext | nindent 12 }}
           {{- if .Values.heimdall.deployment.image.digest }}
@@ -46,23 +57,47 @@ spec:
           image: "{{ .Values.heimdall.deployment.image.repository }}:{{ .Values.heimdall.deployment.image.tag | default "latest" }}"
           {{- end }}
           imagePullPolicy: {{ .Values.heimdall.deployment.image.pullPolicy }}
-          command: ["heimdall"]
           args:
             {{- range .Values.heimdall.deployment.commandArgs }}
             - {{ . | quote }}
             {{- end }}
+          environment:
+            - name: "HEIMDALL_CHAIN_ID"
+              value: "{{ .Values.heimdall.deployment.chainId }}"
+            - name: "HEIMDALL_HOME"
+              value: "/data"
           ports:
-            - name: http-rpc
-              containerPort: 8545
-              protocol: TCP
-            - name: auth-port
-              containerPort: 8551
+          - name: heimdall-p2p
+            containerPort: 26656
+            protocol: TCP
+          - name: heimdall-rpc
+            containerPort: 26657
+            protocol: TCP
+          volumeMounts:
+          - name : heimdall-chaindata
+            mountPath: "/data/"
+        - name: {{ .Chart.Name }}-heimdall-rest
+          securityContext:
+            {{- toYaml .Values.heimdall.deployment.securityContext | nindent 12 }}
+          {{- if .Values.heimdall.deployment.image.digest }}
+          image: "{{ .Values.heimdall.deployment.image.repository }}@{{ .Values.heimdall.deployment.image.digest }}"
+          {{- else }}
+          image: "{{ .Values.heimdall.deployment.image.repository }}:{{ .Values.heimdall.deployment.image.tag | default "latest" }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.heimdall.deployment.image.pullPolicy }}
+          args:
+            {{- range .Values.heimdall.deployment.heimdallRest.commandArgs }}
+            - {{ . | quote }}
+            {{- end }}
+          environment:
+            - name: "HEIMDALL_CHAIN_ID"
+              value: "{{ .Values.heimdall.deployment.chainId }}"
+            - name: "HEIMDALL_HOME"
+              value: "/data"
+          ports:
+            - name: heimdall-rest
+              containerPort: 1317
               protocol: TCP
           volumeMounts:
-          - name: jwt-secret
-            readOnly: true
-            mountPath: "/secret/"
-          {{- if .Values.heimdall.persistentVolume.create }}
-          - name : heimdall-data
+          - name : heimdall-chaindata
             mountPath: "/data/"
-          {{- end}}

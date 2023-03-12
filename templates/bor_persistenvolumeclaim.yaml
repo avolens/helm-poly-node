@@ -1,9 +1,9 @@
-{{- if .Values.prysm.persistentVolume.create }}
+{{- if .Values.bor.persistentVolume.create }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: prysm-pvc
-  {{- with .Values.prysm.persistentVolume.annotations }}
+  {{- with .Values.bor.persistentVolume.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
@@ -12,6 +12,6 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.prysm.persistentVolume.size }}
-  storageClassName: {{ .Values.prysm.persistentVolume.class }}
+      storage: {{ .Values.bor.persistentVolume.size }}
+  storageClassName: {{ .Values.bor.persistentVolume.class }}
 {{- end }}
