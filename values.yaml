@@ -15,7 +15,7 @@ heimdall:
     podAnnotations: {}
     podSecurityContext: {}
     securityContext: {}
-    chainId: heimdall-137
+    chainId: heimdall-8001
     heimdallRest:
       commandArgs:
         - "rest-server"
@@ -26,12 +26,13 @@ heimdall:
   persistentVolume:
     snapshot:
       create: false
-      size: 400Gi
+      url: "https://snapshot-download.polygon.technology/heimdall-mumbai-fullnode-2023-03-15.tar.zst"
+      size: 50Gi
       class: standard-rwo
       annotations:
         "helm.sh/resource-policy": keep
     chaindata:
-      size: 400Gi
+      size: 2000Gi
       class: standard-rwo
       annotations:
         "helm.sh/resource-policy": keep

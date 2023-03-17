@@ -39,7 +39,7 @@ spec:
       initContainers:
       - name: init-heimdall
         image: busybox:1.36.0
-        command: [""]
+        command: ["wget -O /snapshot/heimdall.snapshot {{ .Values.heimdall.persistentVolume.snapshot.url }} && tar --use-compress-program=unzstd -xvf /snapshot/heimdall.snapshot -C /chaindata"]
         volumeMounts:
         - name: heimdall-chaindata
           mountPath: /chaindata

@@ -9,13 +9,17 @@ metadata:
 spec:
   type: {{ .Values.heimdall.service.type }}
   ports:
-    - port: 8545
-      targetPort: http-rpc
+    - port: 26656
+      targetPort: heimdall-p2p
       protocol: TCP
-      name: http-rpc
-    - port: 8551
-      targetPort: auth-port
+      name: heimdall-p2p
+    - port: 26657
+      targetPort: heimdall-rpc
       protocol: TCP
-      name: auth-rpc
+      name: heimdall-rpc
+    - port: 1317
+      targetPort: heimdall-rest
+      protocol: TCP
+      name: heimdall-rest
   selector:
     app: "heimdall"
