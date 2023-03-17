@@ -38,8 +38,8 @@ spec:
       {{- end }}
       initContainers:
       - name: init-heimdall
-        image: busybox:1.36.0
-        command: ["wget -O /snapshot/heimdall.snapshot {{ .Values.heimdall.persistentVolume.snapshot.url }} && tar --use-compress-program=unzstd -xvf /snapshot/heimdall.snapshot -C /chaindata"]
+        image: ubuntu:22.04
+        command: ["sh", "-c", "apt update -y && apt install -y zstd && test -f /snapshot/heimdall.snapshot && tar -xavf /snapshot/heimdall.snapshot -C /chaindata || wget -O /snapshot/heimdall.snapshot {{ .Values.heimdall.persistentVolume.snapshot.url }} && tar -xvf /snapshot/heimdall.snapshot -C /chaindata"]
         volumeMounts:
         - name: heimdall-chaindata
           mountPath: /chaindata
@@ -61,7 +61,7 @@ spec:
             {{- range .Values.heimdall.deployment.commandArgs }}
             - {{ . | quote }}
             {{- end }}
-          environment:
+          env:
             - name: "HEIMDALL_CHAIN_ID"
               value: "{{ .Values.heimdall.deployment.chainId }}"
             - name: "HEIMDALL_HOME"
@@ -89,7 +89,7 @@ spec:
             {{- range .Values.heimdall.deployment.heimdallRest.commandArgs }}
             - {{ . | quote }}
             {{- end }}
-          environment:
+          env:
             - name: "HEIMDALL_CHAIN_ID"
               value: "{{ .Values.heimdall.deployment.chainId }}"
             - name: "HEIMDALL_HOME"
